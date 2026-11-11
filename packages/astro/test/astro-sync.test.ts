@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import { beforeEach, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { globalContentLayer } from '../dist/content/instance.js';
 import type { AstroLoggerMessage } from '../dist/core/logger/core.js';
 import { AstroLogger } from '../dist/core/logger/core.js';
 import { type Fixture, loadFixture } from './test-utils.ts';
@@ -166,6 +167,13 @@ describe('astro sync', () => {
 				'Types file does not include `astro:content` module declaration',
 			);
 			fixture.thenFileShouldBeValidTypeScript('.astro/content.d.ts');
+		});
+
+		it('Releases the content layer after syncing', async () => {
+			await fixture.load('./fixtures/content-collections/');
+			fixture.clean();
+			await fixture.whenSyncing();
+			assert.equal(globalContentLayer.get(), null);
 		});
 
 		it('Writes types for empty collections', async () => {
