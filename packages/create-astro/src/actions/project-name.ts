@@ -40,26 +40,33 @@ export async function projectName(
 		});
 
 		ctx.cwd = name!.trim();
-		ctx.projectName = toValidName(name!);
+		ctx.projectName = toValidName(getNameFromPath(ctx.cwd));
 		if (ctx.dryRun) {
 			await info('--dry-run', 'Skipping project naming');
 			return;
 		}
 	} else {
-		let name = ctx.cwd;
-		if (name === '.' || name === './') {
-			const parts = process.cwd().split(path.sep);
-			name = parts[parts.length - 1];
-		} else if (name.startsWith('./') || name.startsWith('../')) {
-			const parts = name.split('/');
-			name = parts[parts.length - 1];
-		}
-		ctx.projectName = toValidName(name);
+		ctx.projectName = toValidName(getNameFromPath(ctx.cwd));
 	}
 
 	if (!ctx.cwd) {
 		ctx.exit(1);
 	}
+}
+
+/**
+ * Returns the package name implied by a project directory: the last path segment,
+ * the current directory name for `.`, or the input unchanged if it is a scoped
+ * package name like `@scope/name`.
+ */
+function getNameFromPath(dir: string) {
+	if (dir === '.' || dir === './') {
+		const parts = process.cwd().split(path.sep);
+		return parts[parts.length - 1];
+	}
+	if (/^@[^/\\]+\/[^/\\]+$/.test(dir)) return dir;
+	const parts = dir.split(/[/\\]/).filter(Boolean);
+	return parts[parts.length - 1] ?? dir;
 }
 
 async function checkCwd(cwd: string | undefined) {

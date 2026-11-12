@@ -18,6 +18,29 @@ describe('project name', async () => {
 		assert.equal(context.projectName, 'baz');
 	});
 
+	it('uses the last segment of a nested path without a leading ./', async () => {
+		const context: ProjectNameContext = {
+			projectName: '',
+			cwd: 'apps/web',
+			prompt: mockPrompt({}),
+			exit: mockExit,
+		};
+		await projectName(context);
+		assert.equal(context.cwd, 'apps/web');
+		assert.equal(context.projectName, 'web');
+	});
+
+	it('uses the last segment of an absolute path', async () => {
+		const context: ProjectNameContext = {
+			projectName: '',
+			cwd: '/tmp/create-astro-absolute/my-site',
+			prompt: mockPrompt({}),
+			exit: mockExit,
+		};
+		await projectName(context);
+		assert.equal(context.projectName, 'my-site');
+	});
+
 	it('dot', async () => {
 		const context: ProjectNameContext = {
 			projectName: '',
@@ -111,6 +134,18 @@ describe('project name', async () => {
 		};
 		await projectName(context);
 		assert.equal(context.projectName, 'invalid');
+	});
+
+	it('uses the last segment of a nested path entered at the prompt', async () => {
+		const context: ProjectNameContext = {
+			projectName: '',
+			cwd: '',
+			prompt: mockPrompt({ name: './projects/my-site' }),
+			exit: mockExit,
+		};
+		await projectName(context);
+		assert.equal(context.cwd, './projects/my-site');
+		assert.equal(context.projectName, 'my-site');
 	});
 
 	it('handles scoped packages', async () => {
